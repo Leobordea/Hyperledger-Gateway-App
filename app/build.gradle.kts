@@ -43,4 +43,6 @@ dependencies {
     implementation(libs.fabric.gateway) {
         exclude(group = "com.google.api.grpc", module = "proto-google-common-protos")
     }
+    implementation("io.grpc:grpc-okhttp:1.63.0")
+
 }

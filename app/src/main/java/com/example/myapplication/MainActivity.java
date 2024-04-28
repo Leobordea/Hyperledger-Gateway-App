@@ -60,7 +60,7 @@ public class MainActivity extends AppCompatActivity {
     private static final String OVERRIDE_AUTH = "peer0.org1.example.com";
 
     private Contract contract;
-    private final String assetId = "asset" + Instant.now().toEpochMilli();
+    private final String virusID = String.valueOf(Instant.now().toEpochMilli());
     private final Gson gson = new GsonBuilder().setPrettyPrinting().create();
     private TextView displayTextView;
     
@@ -134,42 +134,36 @@ public class MainActivity extends AppCompatActivity {
                 initLedger();
 
                 // Return all the current assets on the ledger.
-                getAllAssets();
+                GetAllSignatures();
 
                 // Create a new asset on the ledger.
-                createAsset();
+                UploadSignature();
 
-                // Update an existing asset asynchronously.
-                transferAssetAsync();
-
-                // Get the asset details by assetID.
-                readAssetById();
+                // Get the asset details by virusID.
+                GetSignature();
 
                 // Update an asset which does not exist.
-                updateNonExistentAsset();
+                updateNonExistentSignature();
             } catch (EndorseException | SubmitException | CommitStatusException e) {
                 Log.e(TAG, "Error occurred", e);
             }
         }
 
         private void initLedger() throws EndorseException, SubmitException, CommitStatusException, CommitException {
-            displayTextView.append( "\n--> Submit Transaction: InitLedger, function creates the initial set of assets on the ledger");
+            displayTextView.append("\n--> Submit Transaction: InitLedger, function creates the initial set of assets on the ledger\n");
 
             contract.submitTransaction("InitLedger");
 
-            displayTextView.append( "*** Transaction committed successfully");
+            displayTextView.append("*** Transaction committed successfully\n");
         }
     }
 
-    /**
-     * Evaluate a transaction to query ledger state.
-     */
-    private void getAllAssets() throws GatewayException {
-        displayTextView.append("\n--> Evaluate Transaction: GetAllAssets, function returns all the current assets on the ledger");
+    private void GetAllSignatures() throws GatewayException {
+        displayTextView.append("\n--> Evaluate Transaction: GetAllAssets, function returns all the current assets on the ledger\n");
 
-        var result = contract.evaluateTransaction("GetAllAssets");
+        var result = contract.evaluateTransaction("GetAllSignatures");
 
-        displayTextView.append("*** Result: " + prettyJson(result));
+        displayTextView.append("*** Result: " + prettyJson(result) + "\n");
     }
 
     private String prettyJson(final byte[] json) {
@@ -185,80 +179,51 @@ public class MainActivity extends AppCompatActivity {
      * Submit a transaction synchronously, blocking until it has been committed to
      * the ledger.
      */
-    private void createAsset() throws EndorseException, SubmitException, CommitStatusException, CommitException {
-        displayTextView.append("\n--> Submit Transaction: CreateAsset, creates new asset with ID, Color, Size, Owner and AppraisedValue arguments");
+    private void UploadSignature() throws EndorseException, SubmitException, CommitStatusException, CommitException {
+        displayTextView.append("\n--> Submit Transaction: CreateAsset, creates new asset with ID, Color, Size, Owner and AppraisedValue arguments\n");
 
-        contract.submitTransaction("CreateAsset", assetId, "yellow", "5", "Tom", "1300");
+        contract.submitTransaction("UploadSignature", genIPFSHash(), virusID, "Org1", "virus " + virusID);
 
-        displayTextView.append("*** Transaction committed successfully");
+        displayTextView.append("*** Transaction committed successfully\n");
     }
 
-    /**
-     * Submit transaction asynchronously, allowing the application to process the
-     * smart contract response (e.g. update a UI) while waiting for the commit
-     * notification.
-     */
-    private void transferAssetAsync() throws EndorseException, SubmitException, CommitStatusException {
-        displayTextView.append("\n--> Async Submit Transaction: TransferAsset, updates existing asset owner");
+    private void GetSignature() throws GatewayException {
+        displayTextView.append("\n--> Evaluate Transaction: ReadAsset, function returns asset attributes\n");
 
-        var commit = contract.newProposal("TransferAsset")
-                .addArguments(assetId, "Saptha")
-                .build()
-                .endorse()
-                .submitAsync();
+        var evaluateResult = contract.evaluateTransaction("GetSignature", virusID);
 
-        var result = commit.getResult();
-        var oldOwner = new String(result, StandardCharsets.UTF_8);
-
-        displayTextView.append("*** Successfully submitted transaction to transfer ownership from " + oldOwner + " to Saptha");
-        displayTextView.append("*** Waiting for transaction commit");
-
-        var status = commit.getStatus();
-        if (!status.isSuccessful()) {
-            throw new RuntimeException("Transaction " + status.getTransactionId() +
-                    " failed to commit with status code " + status.getCode());
-        }
-
-        displayTextView.append("*** Transaction committed successfully");
-    }
-
-    private void readAssetById() throws GatewayException {
-        displayTextView.append("\n--> Evaluate Transaction: ReadAsset, function returns asset attributes");
-
-        var evaluateResult = contract.evaluateTransaction("ReadAsset", assetId);
-
-        displayTextView.append("*** Result:" + prettyJson(evaluateResult));
+        displayTextView.append("*** Result:" + prettyJson(evaluateResult) + "\n");
     }
 
     /**
      * submitTransaction() will throw an error containing details of any error
      * responses from the smart contract.
      */
-    private void updateNonExistentAsset() {
+    private void updateNonExistentSignature() {
         try {
-            displayTextView.append("\n--> Submit Transaction: UpdateAsset asset70, asset70 does not exist and should return an error");
+            displayTextView.append("\n--> Submit Transaction: UpdateAsset asset70, asset70 does not exist and should return an error\n");
 
-            contract.submitTransaction("UpdateAsset", "asset70", "blue", "5", "Tomoko", "300");
+            contract.submitTransaction("UpdateSignature", genIPFSHash(), "1412", "Org2", "Modifiedvirus3");
 
-            displayTextView.append("******** FAILED to return an error");
+            displayTextView.append("******** FAILED to return an error\n");
         } catch (EndorseException | SubmitException | CommitStatusException e) {
-            displayTextView.append("*** Successfully caught the error: ");
+            displayTextView.append("*** Successfully caught the error: \n");
             e.printStackTrace(System.out);
-            displayTextView.append("Transaction ID: " + e.getTransactionId());
+            displayTextView.append("Transaction ID: " + e.getTransactionId() + "\n");
 
             var details = e.getDetails();
             if (!details.isEmpty()) {
-                displayTextView.append("Error Details:");
+                displayTextView.append("Error Details:\n");
                 for (var detail : details) {
                     displayTextView.append("- address: " + detail.getAddress() + ", mspId: " + detail.getMspId()
-                            + ", message: " + detail.getMessage());
+                            + ", message: " + detail.getMessage() + "\n");
                 }
             }
         } catch (CommitException e) {
-            displayTextView.append("*** Successfully caught the error: " + e);
+            displayTextView.append("*** Successfully caught the error: " + e + "\n");
             e.printStackTrace(System.out);
-            displayTextView.append("Transaction ID: " + e.getTransactionId());
-            displayTextView.append("Status code: " + e.getCode());
+            displayTextView.append("Transaction ID: " + e.getTransactionId() + "\n");
+            displayTextView.append("Status code: " + e.getCode() + "\n");
         }
     }
     public static BufferedReader convertStringToBufferedReader(String inputString) {
@@ -285,5 +250,17 @@ public class MainActivity extends AppCompatActivity {
 
         // Create a ByteArrayInputStream from the bytes
         return new ByteArrayInputStream(bytes);
+    }
+    public String genIPFSHash() {
+        int leftLimit = 48; // numeral '0'
+        int rightLimit = 122; // letter 'z'
+        int targetStringLength = 32;
+        Random random = new Random();
+
+        return random.ints(leftLimit, rightLimit + 1)
+                .filter(i -> (i <= 57 || i >= 65) && (i <= 90 || i >= 97))
+                .limit(targetStringLength)
+                .collect(StringBuilder::new, StringBuilder::appendCodePoint, StringBuilder::append)
+                .toString();
     }
 }

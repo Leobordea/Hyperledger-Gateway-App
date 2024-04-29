@@ -1,6 +1,7 @@
 package com.example.myapplication;
 
 import android.content.Context;
+import android.os.Looper;
 import android.util.Log;
 import android.widget.TextView;
 
@@ -107,34 +108,27 @@ public class MyGatewayHandler {
         }
     }
 
-    private class HyperledgerGateway {
+    private class HyperledgerGateway implements Runnable {
 
         public HyperledgerGateway(Gateway gateway) {
             var network = gateway.getNetwork(CHANNEL_NAME);
             contract = network.getContract(CHAINCODE_NAME);
         }
 
-        public void run() throws GatewayException, CommitException {
+
+        @Override
+        public void run() {
             try {
-                // Initialize a set of virus signature data on the ledger using the chaincode 'InitLedger' function.
+                // Your code to be run in the background thread
                 initLedger();
-
-                // Return all the current virus signatures on the ledger.
                 GetAllSignatures();
-
-                // Create a new virus signature on the ledger.
                 UploadSignature();
-
-                // Get the virus signature details by virusID.
                 GetSignature();
-
-                // Update an virus signature which does not exist.
                 updateNonExistentSignature();
-            } catch (EndorseException | SubmitException | CommitStatusException e) {
-                Log.e(TAG, "Error occurred", e);
+            } catch (GatewayException | CommitException e) {
+                Log.e("BackgroundTask", "Error occurred", e);
             }
         }
-
         private void initLedger() throws EndorseException, SubmitException, CommitStatusException, CommitException {
             displayTextView.append("\n--> Submit Transaction: InitLedger, function creates the initial set of virus signatures on the ledger\n");
 

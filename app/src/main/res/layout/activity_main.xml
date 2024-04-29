@@ -22,15 +22,16 @@
                 android:id="@+id/textView"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
+                android:text="Welcome to SigChain"
                 android:textColor="#FFFFFF" />
         </LinearLayout>
     </ScrollView>
 
     <Button
-        android:id="@+id/show_log_button"
+        android:id="@+id/start_button"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:text="Show Log"
+        android:text="Start Gateway"
         app:layout_constraintBottom_toBottomOf="parent"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toStartOf="parent"
